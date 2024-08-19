@@ -78,7 +78,7 @@ class GeoJSONViewer(tk.Frame):
 
             self.canvas.draw()
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An error occurred while plotting GeoJSON data: {e}")
 
     def get_color(self, row):
         color_map = {
@@ -89,6 +89,40 @@ class GeoJSONViewer(tk.Frame):
             "runway": "#000000"  # Default color for runway, not changed
         }
         return color_map.get(row['asdex'], 'grey')
+
+    def plot_aircraft_data(self, aircraft_data):
+        try:
+            self.ax.clear()  # Clear previous plots
+            self.ax.axis('off')
+
+            # Plot GeoJSON data if available
+            if self.current_file_path:
+                gdf = gpd.read_file(self.current_file_path)
+                gdf.plot(ax=self.ax, color=gdf.apply(lambda row: self.get_color(row), axis=1))
+
+            # Plot aircraft data
+            for aircraft in aircraft_data:
+                print(aircraft)  # Debugging: Print the aircraft data to see its structure
+
+                lat = aircraft.get('lat')
+                lon = aircraft.get('lon')
+                callsign = aircraft.get('flight', aircraft.get('r', 'N/A')).strip()
+
+                self.ax.plot(lon, lat, 'ro', markersize=5)  # Red dot for aircraft
+
+                # Add text for the aircraft callsign
+                self.ax.text(lon, lat, callsign, fontsize=8, color='white')
+
+            self.ax.set_facecolor(self.colors['background'])
+            self.ax.patch.set_facecolor(self.colors['background'])
+            self.figure.patch.set_facecolor(self.colors['background'])
+
+            # Maintain aspect ratio
+            self.ax.set_aspect('equal', adjustable='datalim')
+
+            self.canvas.draw()
+        except Exception as e:
+            print(f"An error occurred while plotting aircraft data: {e}")
 
     def toggle_day_night(self):
         self.day_mode = not self.day_mode
